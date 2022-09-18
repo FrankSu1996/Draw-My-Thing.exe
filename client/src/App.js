@@ -1,7 +1,9 @@
 import "./App.css";
 
 function App() {
-  return <div className="App">Hello world!</div>;
+  var x = 1;
+  var x = 2;
+  return <div className="App">Hello world from client!</div>;
 }
 
 export default App;
