@@ -1,7 +1,8 @@
-import "./App.css";
+import "./App.scss";
 import { useState, useRef, useEffect } from "react";
 import CanvasDraw from "react-canvas-draw";
 import { io } from "socket.io-client";
+import Canvas from "./Components/Canvas";
 const socket = io("http://localhost:3001");
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
     <div className="App">
       <div>
         <p>Connected: {"" + isConnected}</p>
+        <Canvas></Canvas>
       </div>
       <button
         onClick={() => {
