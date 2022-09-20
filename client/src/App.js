@@ -2,7 +2,14 @@ import "./App.scss";
 import { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 import { SendCanvas, ReceiveCanvas } from "./Components/Canvas";
-const socket = io("http://localhost:3001");
+
+let socketUrl;
+if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
+  socketUrl = "http://localhost:3001";
+} else {
+  socketUrl = "https://drawmything.herokuapp.com";
+}
+const socket = io(socketUrl);
 
 function App() {
   const [isConnected, setIsConnected] = useState(socket.connected);
