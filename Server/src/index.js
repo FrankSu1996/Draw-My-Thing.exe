@@ -39,4 +39,4 @@ server.listen(3001, () => {
   console.log("listening on *:3001");
 });
 
-instrument(io, { auth: false });
+instrument(io, { auth: false, namespaceName: "test" });

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 import { SendCanvas, ReceiveCanvas } from "./Components/Canvas";
 
-let socketUrl = "https://drawmything.herokuapp.com";
+let socketUrl = "http://localhost:3001";
 // if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
 //   socketUrl = "http://localhost:3001";
 // } else {

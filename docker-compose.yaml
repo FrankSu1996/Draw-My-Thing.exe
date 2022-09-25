@@ -1,0 +1,55 @@
+# This docker-compose file starts two services:
+# the dind service contains the official docker:dind image
+services:
+  # this container contains the docker runtime inside a container (dind)
+  dind:
+    image: docker:dind
+    user: root
+    privileged: true
+    container_name: dind
+    ports:
+      - 2376:2376
+    networks:
+      jenkins_dind:
+        aliases:
+          - docker
+    # where TLS certificates are stored
+    environment:
+      - DOCKER_TLS_CERTDIR=/certs
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - jenkins_docker_certs:/certs/client
+    command: --storage-driver=overlay2
+ 
+  # this container contains a base jenkins image that has the docker cli installed
+  # and is talking with the docker daemon in the dind service
+  jenkins:
+    build: 
+      context: .
+      dockerfile: Dockerfile.jenkins
+    container_name: jenkins
+    # 8080 port is jenkins ui, 50000 is ports listening to jenkins agent connections
+    ports:
+      - 8080:8080
+      - 50000:50000
+    restart: on-failure
+    depends_on:
+      - dind
+    environment:
+      - DOCKER_HOST=tcp://docker:2376
+      - DOCKER_CERT_PATH=/certs/client
+      - DOCKER_TLS_VERIFY=1
+    # jenkins_home stores the jenkins configuration
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - jenkins_docker_certs:/certs/client
+    networks:
+      - jenkins_dind
+
+volumes:
+  jenkins_home:
+  jenkins_docker_certs:
+
+networks:
+  jenkins_dind:
+    driver: bridge
