@@ -9,6 +9,7 @@ const cors = require("cors");
 const io = new Server(server, {
   cors: {
     origin: [
+      "http://localhost",
       "http://localhost:3000",
       "https://admin.socket.io",
       "https://drawmything.herokuapp.com/",
