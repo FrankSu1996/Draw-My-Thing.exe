@@ -12,7 +12,7 @@ pipeline {
             agent any
             steps {
                 echo 'Building Profile Management ui...'
-                sh 'docker build -t draw-my-thing -f client/Dockerfile'
+                sh 'docker build -t draw-my-thing client'
             }
         }
         stage('Run end to end tests') {
