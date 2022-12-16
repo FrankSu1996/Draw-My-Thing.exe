@@ -34,6 +34,17 @@ io.on("connection", (socket) => {
   socket.on("send-start-drawing", (canvasData) => {
     io.emit("receive-start-drawing", canvasData);
   });
+
+  socket.on("send-clear-canvas", () => {
+    io.emit("receive-clear-canvas");
+  });
+
+  socket.on("send-canvas-undo", (canvasData) => {
+    io.emit("receive-canvas-undo", canvasData);
+  });
+  socket.on("send-canvas-redo", (canvasData) => {
+    io.emit("receive-canvas-redo", canvasData);
+  });
 });
 
 server.listen(3001, () => {

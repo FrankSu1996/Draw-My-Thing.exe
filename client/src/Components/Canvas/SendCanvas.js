@@ -5,6 +5,10 @@ const SendCanvas = ({ height, width, socket }) => {
   const contextRef = useRef(null);
   const [drawColor, setDrawColor] = useState("black");
   const [isDrawing, setIsDrawing] = useState(false);
+  const [undo, setUndo] = useState(0);
+  const [undoSteps, setUndoSteps] = useState({});
+  const [redoStep, setRedoStep] = useState({});
+  const [redo, setRedo] = useState(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -22,7 +26,17 @@ const SendCanvas = ({ height, width, socket }) => {
     contextRef.current.beginPath();
     contextRef.current.moveTo(offsetX, offsetY);
     setIsDrawing(true);
-    socket.emit("send-start-drawing", { x: offsetX, y: offsetY });
+    const temp = {
+      ...undoSteps,
+      [undo + 1]: [],
+    };
+    temp[undo + 1].push({ offsetX, offsetY });
+    setUndoSteps(temp);
+    setUndo((undo) => undo + 1);
+    socket.emit("send-start-drawing", {
+      x: offsetX,
+      y: offsetY,
+    });
   };
 
   const finishDrawing = () => {
@@ -38,7 +52,88 @@ const SendCanvas = ({ height, width, socket }) => {
     const { offsetX, offsetY } = nativeEvent;
     contextRef.current.lineTo(offsetX, offsetY);
     contextRef.current.stroke();
-    socket.emit("send-canvas-data", { x: offsetX, y: offsetY });
+    const temp = {
+      ...undoSteps,
+    };
+    temp[undo].push({ offsetX, offsetY });
+    setUndoSteps(temp);
+    socket.emit("send-canvas-data", {
+      x: offsetX,
+      y: offsetY,
+    });
+  };
+
+  const clearCanvas = () => {
+    contextRef.current.clearRect(0, 0, width, height);
+    socket.emit("send-clear-canvas");
+    setUndo(0);
+    setUndoSteps({});
+  };
+
+  const undoOperation = () => {
+    if (undo > 0) {
+      const data = undoSteps[undo];
+      contextRef.current.strokeStyle = "white";
+      contextRef.current.beginPath();
+      contextRef.current.lineWidth = 5;
+      contextRef.current.moveTo(data[0].offsetX, data[0].offsetY);
+      data.forEach((item, index) => {
+        if (index !== 0) {
+          contextRef.current.lineTo(item.offsetX, item.offsetY);
+          contextRef.current.stroke();
+        }
+      });
+      contextRef.current.closePath();
+      contextRef.current.strokeStyle = "black";
+      const temp = {
+        ...undoSteps,
+        [undo]: [],
+      };
+      const te = {
+        ...redoStep,
+        [redo + 1]: [...data],
+      };
+      setUndo((undo) => undo - 1);
+      setRedo((redo) => redo + 1);
+      setRedoStep(te);
+      setUndoSteps(temp);
+    }
+    socket.emit("send-canvas-undo", {
+      undoSteps,
+      undo,
+    });
+  };
+
+  const redoOperation = () => {
+    if (redo > 0) {
+      const data = redoStep[redo];
+      contextRef.current.strokeStyle = "black";
+      contextRef.current.beginPath();
+      contextRef.current.lineWidth = 5;
+      contextRef.current.moveTo(data[0].offsetX, data[0].offsetY);
+      data.forEach((item, index) => {
+        if (index !== 0) {
+          contextRef.current.lineTo(item.offsetX, item.offsetY);
+          contextRef.current.stroke();
+        }
+      });
+      contextRef.current.closePath();
+      const temp = {
+        ...redoStep,
+        [redo]: [],
+      };
+      setUndo((undo) => undo + 1);
+      setRedo((redo) => redo - 1);
+      setRedoStep(temp);
+      setUndoSteps({
+        ...undoSteps,
+        [undo + 1]: [...data],
+      });
+    }
+    socket.emit("send-canvas-redo", {
+      redoStep,
+      redo,
+    });
   };
 
   return (
@@ -53,20 +148,25 @@ const SendCanvas = ({ height, width, socket }) => {
         width={width}
       ></canvas>
       <div className="tools">
-        <button type="button" className="button">
+        <button
+          type="button"
+          className="button"
+          disabled={undo === 0}
+          onClick={undoOperation}
+        >
           Undo
         </button>
-        <button type="button" className="button">
+        <button
+          type="button"
+          className="button"
+          disabled={redo === 0}
+          onClick={redoOperation}
+        >
+          Redo
+        </button>
+        <button type="button" className="button" onClick={clearCanvas}>
           Clear
         </button>
-
-        <div className="color-field" style={{ background: "red" }}></div>
-        <div className="color-field" style={{ background: "blue" }}></div>
-        <div className="color-field" style={{ background: "green" }}></div>
-        <div className="color-field" style={{ background: "yellow" }}></div>
-
-        <input type="color" className="color-picker"></input>
-        <input type="range" min={1} max={100} className="pen-range"></input>
       </div>
     </div>
   );

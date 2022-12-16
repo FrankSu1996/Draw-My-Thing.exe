@@ -19,7 +19,8 @@
   "scripts": {
     "build-client": "docker build -t draw-my-thing .",
     "run-client": "docker run -p 80:80 draw-my-thing",
-    "build": "react-scripts --max_old_space_size=4096 build"
+    "build": "react-scripts --max_old_space_size=4096 build",
+    "start": "react-scripts start"
   },
   "eslintConfig": {
     "extends": [

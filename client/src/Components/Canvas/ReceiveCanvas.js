@@ -21,6 +21,47 @@ const ReceiveCanvas = ({ height, width, socket }) => {
     contextRef.current.closePath();
   };
 
+  const clearCanvas = () => {
+    contextRef.current.clearRect(0, 0, width, height);
+  };
+
+  const undoOperation = (canvasData) => {
+    const { undoSteps, undo } = canvasData;
+    if (undo > 0) {
+      const data = undoSteps[undo];
+      contextRef.current.strokeStyle = "white";
+      contextRef.current.beginPath();
+      contextRef.current.lineWidth = 5;
+      contextRef.current.moveTo(data[0].offsetX, data[0].offsetY);
+      data.forEach((item, index) => {
+        if (index !== 0) {
+          contextRef.current.lineTo(item.offsetX, item.offsetY);
+          contextRef.current.stroke();
+        }
+      });
+      contextRef.current.closePath();
+      contextRef.current.strokeStyle = "black";
+    }
+  };
+
+  const redoOperation = (canvasData) => {
+    const { redoStep, redo } = canvasData;
+    if (redo > 0) {
+      const data = redoStep[redo];
+      contextRef.current.strokeStyle = "black";
+      contextRef.current.beginPath();
+      contextRef.current.lineWidth = 5;
+      contextRef.current.moveTo(data[0].offsetX, data[0].offsetY);
+      data.forEach((item, index) => {
+        if (index !== 0) {
+          contextRef.current.lineTo(item.offsetX, item.offsetY);
+          contextRef.current.stroke();
+        }
+      });
+      contextRef.current.closePath();
+    }
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
     canvas.width = width;
@@ -40,6 +81,17 @@ const ReceiveCanvas = ({ height, width, socket }) => {
 
     socket.on("receive-start-drawing", (canvasData) => {
       startDrawing(canvasData);
+    });
+
+    socket.on("receive-clear-canvas", () => {
+      clearCanvas();
+    });
+
+    socket.on("receive-canvas-undo", (canvasData) => {
+      undoOperation(canvasData);
+    });
+    socket.on("receive-canvas-redo", (canvasData) => {
+      redoOperation(canvasData);
     });
   }, []);
 
